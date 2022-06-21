@@ -1,6 +1,8 @@
 # Introduction
 
-The Benefits Cliff Simulation repository...
+The Benefits Cliff Simulation game serves as a tool for the community to understand how household expenses, benefit programs, taxes, and income all play a crucial part in 
+
+For more information on how benefit amounts are calculated, please visit https://github.com/forsythfuture/benefits-cliff. If you have questions, please reach out to info@forsythfutures.org for additional guidance.
 
 # Household Expenses 
 
