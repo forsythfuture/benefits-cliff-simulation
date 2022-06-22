@@ -6,7 +6,7 @@ library(tidyverse)
 # Expenses
 
 # livable wages' family type expenses dataset
-expenses <- readxl::read_xlsx('~/benefits-cliff-simulation/itemized_expenses_family_type.xlsx') %>% 
+expenses <- readr::read_csv('~/benefits-cliff-simulation/itemized_expenses_family_type.csv') %>% 
   select(-`Total Expenses`) %>% 
   # filter for needed family types
   filter(`Family Type` %in% c('Two working adults with a 2- and 4-year-old', 'One adult with a 2-and 4-year-old', 'One adult')) %>% 
