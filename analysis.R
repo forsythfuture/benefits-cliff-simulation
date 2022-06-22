@@ -6,7 +6,7 @@ library(tidyverse)
 # Expenses
 
 # livable wages' family type expenses dataset
-expenses <- readr::read_csv('~/benefits-cliff-simulation/itemized_expenses_family_type.csv') %>% 
+expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_family_type.csv') %>% 
   select(-`Total Expenses`) %>% 
   # filter for needed family types
   filter(`Family Type` %in% c('Two working adults with a 2- and 4-year-old', 'One adult with a 2-and 4-year-old', 'One adult')) %>% 
@@ -27,7 +27,7 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/itemized_expenses_famil
 # Benefits
 
 # read in master benefits spreadsheet
-benefits <- readr::read_csv('~/benefits-cliff-simulation/benefits.csv') %>% 
+benefits <- readr::read_csv('~/benefits-cliff-simulation/csvs/benefits.csv') %>% 
   # align the types of benefits with the expenses dataset's categories above
   mutate(category = case_when(
     benefit == "FNS (Food Stamps)" | benefit == "WIC" ~ "Food",
@@ -75,6 +75,7 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
 
 # household compositions, household pre-tax income, family number, and round number vectors
 households <- c(rep('2 adults, 2 children', 6), rep('1 adult, 2 children', 3), rep('1 adult', 3))
+# NOTE the third element in the pre_tax_income is 7000 not 7219 because the benefits' dataset only goes up to 7000
 pre_tax_income <- c(5833, 6353, 7000, 3300, 4625, 4856, 3550, 3839, 4030, 967, 1947, 2350)
 family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
@@ -172,3 +173,4 @@ dat <- bind_rows(outcomes, expenses) %>%
 
 # View(dat)
 
+# readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
