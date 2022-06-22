@@ -1,8 +1,8 @@
 # Introduction
 
-The Benefits Cliff Simulation game serves as a tool for the community to understand how household expenses, benefit programs, taxes, and income all play a crucial part in 
+The Benefits Cliff Simulation game serves as a tool for the community to understand how household composition, expenses, benefit programs, taxes, and income all play a crucial part in impacting a household's monthly net income. From this game, one can see that purely increases in income may cause more harm than good for particular households but not so for others.
 
-For more information on how benefit amounts are calculated, please visit https://github.com/forsythfuture/benefits-cliff. If you have questions, please reach out to info@forsythfutures.org for additional guidance.
+For more information on how benefit amounts are calculated, please visit https://github.com/forsythfuture/benefits-cliff. In addition, please view the text below to understand how expenses by household composition were determined. If you have any further questions, please reach out to info@forsythfutures.org for additional guidance.
 
 # Household Expenses 
 
