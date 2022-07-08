@@ -7,7 +7,8 @@ library(tidyverse)
 
 # livable wages' family type expenses dataset
 expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_family_type.csv') %>% 
-  select(-`Total Expenses`) %>% 
+  # remove taxes and the total expenses columns
+  select(-`Total Expenses`, -`Taxes`) %>% 
   # filter for needed family types
   filter(`Family Type` %in% c('Two working adults with a 2- and 4-year-old', 'One adult with a 2-and 4-year-old', 'One adult')) %>% 
   slice(1, rep(2, 2), 3) %>% 
@@ -58,25 +59,25 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
 # Household monthly incomes and corresponding wages for the different household compositions
 
 # Single
-# 5.58, 11.24, 13.57 - Wage
-# 967, 1947, 2350 - Monthly
+# 7.25, 10.50, 14.00 - Wage
+# 1255.7, 1818.6, 2424.8 - Monthly
 
 # Single two children
-# 20.50, 22.17, 23.27 - Wage
-# 3550, 3839, 4030 - Monthly
+# 16.50, 21.50, 23.50 - Wage
+# 2857.8, 3723.8, 4070.2 - Monthly
 
 # Two parents, two children
-# 19.05, 26.7, 28.04 - Wage
-# 3300, 4625, 4856 - Monthly
+# 20.50, 25.50, 28.50 - Wage
+# 3550.6, 4416.6, 4936.2 - Monthly
 
 # Two parents, two children
-# 33.68, 36.68, 41.68 - Wage
-# 5833, 6353, 7219 - Monthly
+# 33.50, 35.50, 40.50 - Wage
+# 5802.2, 6148.6, 7014.6 - Monthly
 
 # household compositions, household pre-tax income, family number, and round number vectors
 households <- c(rep('2 adults, 2 children', 6), rep('1 adult, 2 children', 3), rep('1 adult', 3))
-# NOTE the third element in the pre_tax_income is 7000 not 7219 because the benefits' dataset only goes up to 7000
-pre_tax_income <- c(5833, 6353, 7000, 3300, 4625, 4856, 3550, 3839, 4030, 967, 1947, 2350)
+# NOTE the third element in the pre_tax_income is 7000 not 7014.6 because the benefits' dataset only goes up to 7000
+pre_tax_income <- c(5802, 6149, 7000, 3551, 4417, 4936, 2858, 3724, 4070, 1256, 1819, 2425)
 family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
 
@@ -96,8 +97,7 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
   # add in blank zero columns for row bind later
   mutate(`Health Care` = 0,
          Savings = 0,
-         Transportation = 0,
-         Taxes = 0)
+         Transportation = 0)
 
 # View(outcomes)
 
@@ -140,7 +140,7 @@ after_tax_income <- family_taxes %>%
   mutate(`Family Number` = rep(1:4, each = 3), .before = taxsimid) %>%
   mutate(Round = rep(1:3, times = 4), .before = `Family Number`) %>% 
   rowwise() %>% 
-  # TODO ask Shane if fica includes tfica or not
+  # FIXME redo sum after Shane's response
   mutate(tax_liabilities = sum(fiitax, siitax, fica, tfica), .after = `Family Number`) %>% 
   ungroup() %>% 
   # add the pre-tax income column in from above
@@ -155,22 +155,25 @@ after_tax_income <- family_taxes %>%
 # Expenses - Benefits = Total Expenses; Total Expenses - After-Tax Income = Balance
 
 # row bind the expenses and outcomes datasets
+# TODO make health insurance zero if negative, check out ACA subsidy
+# TODO medicaid are zero until threshold broken, use this link - https://www.kff.org/interactive/subsidy-calculator/, 
+# pick one plan for everyone - pre tax income
 dat <- bind_rows(outcomes, expenses) %>% 
   # group by the round, family number and family type to make sure rows add up properly
   group_by(Round, `Family Number`, `Family Type`) %>% 
   # take the difference between expenses and benefit outcomes by category
-  summarise(across(Food:Taxes, ~ diff(.x))) %>% 
+  summarise(across(Food:Transportation, ~ diff(.x))) %>% 
   select(Round, `Family Number`, `Family Type`, `Child Care`, Housing, Food, `Health Care`,
-         `Health Insurance`, Savings, Transportation, Taxes, `Other Expenses`) %>% 
+         `Health Insurance`, Savings, Transportation, `Other Expenses`) %>% 
   rowwise() %>% 
   # calculate total expenses across all categories
   mutate(`Total Expenses` = sum(c_across(`Child Care`:`Other Expenses`))) %>% 
   # add the after-tax income column in from above
-  add_column(Income = after_tax_income) %>% 
+  add_column(`After-Tax Income` = after_tax_income) %>% 
   # find the monthly balance, i.e, income minus expenses
-  mutate(Balance = Income - `Total Expenses`) %>% 
+  mutate(Balance = `After-Tax Income` - `Total Expenses`) %>% 
   ungroup()
 
-# View(dat)
+View(dat)
 
 # readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
