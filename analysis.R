@@ -19,7 +19,8 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
   # repeat the four family types 3 times since they go through three rounds
   slice(rep(1:4, times = 3)) %>%
   # add in a round column identification
-  mutate(Round = rep(1:3, each = 4), .before = `Family Number`)
+  mutate(Round = rep(1:3, each = 4), .before = `Family Number`) %>% 
+  arrange(`Family Number`)
 
 # View(expenses)
 
@@ -81,6 +82,18 @@ pre_tax_income <- c(5802, 6149, 7000, 3551, 4417, 4936, 2858, 3724, 4070, 1256, 
 family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
 
+# ACA Subsidies
+# the value of the health benefit is the price of a silver plan on the ACA market silver plan prices for 
+# Forsyth County in 2022 were retrieved from: https://www.kff.org/interactive/subsidy-calculator/
+
+# since children and adults qualify for different programs, calculate the value of their silver plans separately
+# 1. filter for North Carolina and input a Forsyth County zip code, e.g., 27104
+# 2. enter different pre tax incomes for '2. Enter yearly household income as...'
+# 3. put No for '3. Is coverage available from your or your spouse’s job?'
+# 4. age of adult/s assumed to be 30
+
+aca_subsidies <- c(296, 266, 192, 659, 519, 443, 261, 127, 70, 394, 380, 321)
+
 # calculate benefit amounts received by category for each round and family type
 outcomes <- pmap(list(households, pre_tax_income, family, round), 
                  ~ benefit_simuluation(..1, ..2, ..3, ..4) %>% 
@@ -97,7 +110,13 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
   # add in blank zero columns for row bind later
   mutate(`Health Care` = 0,
          Savings = 0,
-         Transportation = 0)
+         Transportation = 0) %>% 
+  # add in aca subsidies for adults only
+  add_column(`ACA Subsidies` = aca_subsidies) %>% 
+  # add  MIC/MAF/NC Health Choice (the past Health Insurance column) with the ACA subsidies
+  # column to get the combined health insurance credit amount
+  mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
+  select(-`ACA Subsidies`)
 
 # View(outcomes)
 
@@ -155,9 +174,6 @@ after_tax_income <- family_taxes %>%
 # Expenses - Benefits = Total Expenses; Total Expenses - After-Tax Income = Balance
 
 # row bind the expenses and outcomes datasets
-# TODO make health insurance zero if negative, check out ACA subsidy
-# TODO medicaid are zero until threshold broken, use this link - https://www.kff.org/interactive/subsidy-calculator/, 
-# pick one plan for everyone - pre tax income
 dat <- bind_rows(outcomes, expenses) %>% 
   # group by the round, family number and family type to make sure rows add up properly
   group_by(Round, `Family Number`, `Family Type`) %>% 
@@ -165,6 +181,8 @@ dat <- bind_rows(outcomes, expenses) %>%
   summarise(across(Food:Transportation, ~ diff(.x))) %>% 
   select(Round, `Family Number`, `Family Type`, `Child Care`, Housing, Food, `Health Care`,
          `Health Insurance`, Savings, Transportation, `Other Expenses`) %>% 
+  # health insurance cannot be negative so make zero
+  mutate(`Health Insurance` = ifelse(`Health Insurance` < 0, 0, `Health Insurance`)) %>% 
   rowwise() %>% 
   # calculate total expenses across all categories
   mutate(`Total Expenses` = sum(c_across(`Child Care`:`Other Expenses`))) %>% 
