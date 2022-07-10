@@ -181,7 +181,7 @@ after_tax_income <- family_taxes %>%
   # add the pre-tax income column in from above
   add_column(pwages = pre_tax_income) %>% 
   # find the after-tax income, i.e., pre-tax income  minus tax liabilities plus EITC
-  mutate(`After-Tax Income` = pwages - (tax_liabilities + EITC)) %>% 
+  mutate(`After-Tax Income` = pwages - tax_liabilities + EITC) %>% 
   # arrange by Round so we can add the after-tax income column in below
   arrange(Round) %>% 
   pull(`After-Tax Income`)
@@ -210,6 +210,6 @@ dat <- bind_rows(outcomes, expenses) %>%
   mutate(Balance = `After-Tax Income` - `Total Expenses`) %>% 
   arrange(`Family Number`)
 
-# View(dat)
+View(dat)
 
 # readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
