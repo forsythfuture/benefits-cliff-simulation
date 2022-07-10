@@ -180,7 +180,7 @@ after_tax_income <- family_taxes %>%
   mutate(across(tax_liabilities:length(.), ~ . / 12)) %>% 
   # add the pre-tax income column in from above
   add_column(pwages = pre_tax_income) %>% 
-  # find the after-tax income, i.e., pre-tax income  minus tax liabilities plus EITC
+  # find the after-tax income, i.e., pre-tax income minus tax liabilities plus EITC
   mutate(`After-Tax Income` = pwages - tax_liabilities + EITC) %>% 
   # arrange by Round so we can add the after-tax income column in below
   arrange(Round) %>% 
