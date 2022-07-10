@@ -71,7 +71,7 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
 # 7.25, 10.50, 14.00 - Wage
 # 1255.7, 1818.6, 2424.8 - Monthly
 
-# Single two children
+# Single, two children
 # 16.50, 21.50, 23.50 - Wage
 # 2857.8, 3723.8, 4070.2 - Monthly
 
@@ -144,7 +144,7 @@ family_income <- data.frame(
   state = rep('North Carolina', 12),
   year = rep(2019, 12),
   mstat = c(rep('married, jointly', 6), rep('single', 6)), # filing status of tax unit
-  pwages = pre_tax_income, # primary wages
+  pwages = pre_tax_income * 12, # primary wages
   # TODO add ages if livable wage uses ages - doesn't seem like it
   # page = c(), # primary taxpayer age
   # sage = c(), # spouse age
@@ -160,7 +160,7 @@ family_income <- data.frame(
 family_taxes <- usincometaxes::taxsim_calculate_taxes(
   .data = family_income,
   marginal_tax_rates = 'Wages',
-  # NOTE EITC is added to after-tax income calculation, but we can all add other tax credits
+  # NOTE EITC is added to after-tax income calculation, but we can add other tax credits
   return_all_information = TRUE
 ) %>% 
   select(taxsimid, fiitax, siitax, tfica, EITC = v25_eitc)
@@ -176,10 +176,12 @@ after_tax_income <- family_taxes %>%
   # from Shane: Total income tax liabilities would be fiitax + siitax + tifica
   mutate(tax_liabilities = sum(fiitax, siitax, tfica), .after = `Family Number`) %>% 
   ungroup() %>% 
+  # make tax liabilities and eitc monthly
+  mutate(across(tax_liabilities:length(.), ~ . / 12)) %>% 
   # add the pre-tax income column in from above
   add_column(pwages = pre_tax_income) %>% 
-  # find the after-tax income, i.e., pre-tax income minus tax liabilities plus EITC
-  mutate(`After-Tax Income` = pwages - tax_liabilities + EITC) %>% 
+  # find the after-tax income, i.e., pre-tax income  minus tax liabilities plus EITC
+  mutate(`After-Tax Income` = pwages - (tax_liabilities + EITC)) %>% 
   # arrange by Round so we can add the after-tax income column in below
   arrange(Round) %>% 
   pull(`After-Tax Income`)
