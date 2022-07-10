@@ -160,9 +160,10 @@ family_income <- data.frame(
 family_taxes <- usincometaxes::taxsim_calculate_taxes(
   .data = family_income,
   marginal_tax_rates = 'Wages',
-  # TODO if we want to add in eitc or other columns into our tax liability sum below, we can
-  return_all_information = FALSE
-)
+  # NOTE EITC is added to after-tax income calculation, but we can all add other tax credits
+  return_all_information = TRUE
+) %>% 
+  select(taxsimid, fiitax, siitax, tfica, EITC = v25_eitc)
 
 # View(family_taxes)
 
@@ -177,8 +178,8 @@ after_tax_income <- family_taxes %>%
   ungroup() %>% 
   # add the pre-tax income column in from above
   add_column(pwages = pre_tax_income) %>% 
-  # find the after-tax income, i.e., pre-tax income minus tax liabilities
-  mutate(`After-Tax Income` = pwages - tax_liabilities) %>% 
+  # find the after-tax income, i.e., pre-tax income minus tax liabilities plus EITC
+  mutate(`After-Tax Income` = pwages - tax_liabilities + EITC) %>% 
   # arrange by Round so we can add the after-tax income column in below
   arrange(Round) %>% 
   pull(`After-Tax Income`)
