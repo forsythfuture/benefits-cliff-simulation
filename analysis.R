@@ -13,6 +13,7 @@ library(tidyverse)
 # Expenses come from Table 3 in https://docs.google.com/document/d/1TyAYSnN3UtUNxXzA91JVEvreffdeBelx/edit#heading=h.etvewqv6kj6b
 
 # livable wages' family type expenses dataset
+# TODO Check with CB that this is the most up-to-date spreadsheet for livable wage
 expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_family_type.csv') %>% 
   # remove taxes and the total expenses columns - we will calculate taxes and sum all expenses together later
   select(-`Total Expenses`, -`Taxes`) %>% 
@@ -129,6 +130,8 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
   # add in aca subsidies for adults only
   add_column(`ACA Subsidies` = aca_subsidies) %>% 
   # add MIC/MAF/NC Health Choice (the past Health Insurance column) with the ACA subsidies
+  # IDEA Can children receive Medicaid and ACA subsidies?
+    # IDEA Add children's ACA subsidies when they are not eligible for Medicaid?
   mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
   select(-`ACA Subsidies`)
 
