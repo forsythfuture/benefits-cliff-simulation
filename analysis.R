@@ -2,11 +2,13 @@
 
 # This script provides updated numbers for ABC's benefits cliff simulation game
 
+# Old graphics/numbers stored here: https://drive.google.com/drive/folders/17yD2H_Z9JxoSjIB7bKf8YIaWEAolHPJm
+
 library(tidyverse)
 
 ################################################################################################################################
 
-# Expenses
+# Expenses per household composition
 
 # Expenses come from Table 3 in https://docs.google.com/document/d/1TyAYSnN3UtUNxXzA91JVEvreffdeBelx/edit#heading=h.etvewqv6kj6b
 
@@ -18,6 +20,7 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
   filter(`Family Type` %in% c('Two working adults with a 2- and 4-year-old', 'One adult with a 2-and 4-year-old', 'One adult')) %>% 
   slice(1, rep(2, 2), 3) %>% 
   # add in family number identification
+  # can be found in Tent Cards.pdf or Income Expenses.pdf at https://drive.google.com/drive/folders/17yD2H_Z9JxoSjIB7bKf8YIaWEAolHPJm
   mutate(`Family Number` = c(4, 1, 2, 3), .before = `Family Type`) %>% 
   # make yearly estimates monthly
   mutate(across(3:length(.), ~ ./ 12)) %>% 
@@ -31,9 +34,9 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
 
 ################################################################################################################################
 
-# Benefits
+# Benefits per household composition
 
-# read in master benefits spreadsheet
+# read in master benefits spreadsheet from https://github.com/forsythfuture/benefits-cliff/tree/master/Forsyth_County_2022/plots/data
 benefits <- readr::read_csv('~/benefits-cliff-simulation/csvs/benefits.csv') %>% 
   # align the types of benefits with the expenses dataset's categories above
   mutate(category = case_when(
@@ -66,6 +69,7 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
 
 # Household monthly incomes and corresponding wages for the different household compositions
 # Amounts were chosen by Daniel to demonstrate the benefits cliff effect
+# https://benefits-cliff-forsyth.s3.amazonaws.com/benefits_cliff_hc.html
 
 # Single
 # 7.25, 10.50, 14.00 - Wage
@@ -94,16 +98,16 @@ family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
 
 # ACA Subsidies
-# the value of the health benefit is the price of a silver plan on the ACA market, silver plan prices for 
-# Forsyth County in 2022 were retrieved from: https://www.kff.org/interactive/subsidy-calculator/
+# the value of the health benefit is the price of a silver plan on the ACA market, the "Estimated financial help" 
+# silver plan prices for Forsyth County in 2022 were retrieved from: https://www.kff.org/interactive/subsidy-calculator/
 
 # since children and adults qualify for different programs, calculate the value of their silver plans separately
 # 1. filter for North Carolina and input a Forsyth County zip code, e.g., 27104
-# 2. enter different pre tax incomes for '2. Enter yearly household income as...'
+# 2. enter different pre-tax incomes above in '2. Enter yearly household income as...'
 # 3. put No for '3. Is coverage available from your or your spouse’s job?'
-# 4. age of adult/s assumed to be 30; do not add children Medicaid will cover them if eligible
+# 4. age of adult/s assumed to be 40; do not add children Medicaid will cover them if eligible
 
-aca_subsidies <- c(296, 266, 192, 659, 519, 443, 261, 127, 70, 394, 380, 321)
+aca_subsidies <- c(395, 365, 292, 754, 618, 543, 311, 177, 119, 444, 430, 370)
 
 # calculate benefit amounts received by category for each round and family type
 outcomes <- pmap(list(households, pre_tax_income, family, round), 
@@ -124,8 +128,7 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
          Transportation = 0) %>% 
   # add in aca subsidies for adults only
   add_column(`ACA Subsidies` = aca_subsidies) %>% 
-  # add  MIC/MAF/NC Health Choice (the past Health Insurance column) with the ACA subsidies
-  # column to get the combined health insurance credit amount
+  # add MIC/MAF/NC Health Choice (the past Health Insurance column) with the ACA subsidies
   mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
   select(-`ACA Subsidies`)
 
@@ -133,21 +136,22 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
 
 ################################################################################################################################
 
-# Taxes
+# Taxes per household composition
 
-# https://www.shaneorr.io/r/usincometaxes/
+# Shane's tax package (usincometaxes): https://www.shaneorr.io/r/usincometaxes/
 
 # create a data frame of needed inputs to run through TAXSIM 35
 # order matches that of the outcomes dataset above
 family_income <- data.frame(
   taxsimid = seq(1, 12), # identifier
   state = rep('North Carolina', 12),
+  # using 2019 since 2020/2021 taxes have out of the ordinary caveats
   year = rep(2019, 12),
   mstat = c(rep('married, jointly', 6), rep('single', 6)), # filing status of tax unit
   pwages = pre_tax_income * 12, # primary wages
-  # TODO add ages if livable wage uses ages - doesn't seem like it
-  # page = c(), # primary taxpayer age
-  # sage = c(), # spouse age
+  # livable wage iterates over 40 year olds and 2 and 4 year olds
+  page = rep(40, 12), # primary taxpayer age
+  sage = c(rep(40, 6), rep(0, 6)), # spouse age
   depx = c(rep(2, 9), rep(0, 3)), # number of dependents
   age1 = c(rep(2, 9), rep(0, 3)), # age child 1
   age2 = c(rep(4, 9), rep(0, 3)), # age child 2
@@ -160,9 +164,8 @@ family_income <- data.frame(
 family_taxes <- usincometaxes::taxsim_calculate_taxes(
   .data = family_income,
   marginal_tax_rates = 'Wages',
-  # NOTE EITC is added to after-tax income calculation, but we can add other tax credits
-  return_all_information = TRUE
-) %>% 
+  # NOTE EITC is added to after-tax income calculation, but we can add other tax credits too
+  return_all_information = TRUE) %>% 
   select(taxsimid, fiitax, siitax, tfica, EITC = v25_eitc)
 
 # View(family_taxes)
