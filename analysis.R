@@ -193,7 +193,7 @@ family_taxes <- usincometaxes::taxsim_calculate_taxes(
   # NOTE EITC is added to after-tax income calculation, but we can add other tax credits too
   # QUESTION are those credits already included in the fiitax, siitax, and tfica
   # NOTE EL *thinks* you would only want to add them at the end if they are refundable credits
-    # TODO EITC is a refundable tax credit. DL to reach out to Shane for better answers
+    # TODO EITC is a refundable tax credit. DL reached out to Shane
   return_all_information = TRUE) %>% 
   select(taxsimid, fiitax, siitax, tfica, EITC = v25_eitc)
 
@@ -215,7 +215,7 @@ after_tax_income <- family_taxes %>%
   # a negative federal liability and that they would get paid either the EITC or
   # the absolute value of the negative tax liability, whichever is smallest
   # it doesn't look like NC offers EITC at the state level 
-    # TODO DL to reach out to Shane
+    # TODO DL reached out to Shane
   ungroup() %>% 
   # make tax liabilities and eitc monthly
   mutate(across(tax_liabilities:length(.), ~ . / 12)) %>% 
@@ -244,6 +244,8 @@ dat <- bind_rows(outcomes, expenses) %>%
   # with medicare and the cost you get from the KFF instead to calculate their expenses after subsidy
   # (you would just need to disclose you're using their silver plan estimate from the calculator)
   # FIXME EL thinks people getting Medicaid, just get medicaid, it's not a subsidy (shouldn't be subtracted)
+    # NOTE from CB: Health insurance includes traditional fee-for-service health plans, preferred-provider health plans, health maintenance 
+    # organizations (HMO's), commercial Medicare supplements, and other health insurance
   select(Round, `Family Number`, `Family Type`, `Child Care`, Housing, Food, `Health Care`,
          `Health Insurance`, Savings, Transportation, `Other Expenses`) %>% 
   # health insurance cannot be negative so make zero
