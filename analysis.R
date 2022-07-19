@@ -12,8 +12,7 @@ library(tidyverse)
 
 # Expenses come from Table 3 in https://docs.google.com/document/d/1TyAYSnN3UtUNxXzA91JVEvreffdeBelx/edit#heading=h.etvewqv6kj6b
 
-# livable wages' family type expenses dataset
-# TODO Check with CB that this is the most up-to-date spreadsheet for livable wage
+# livable wages' family type expenses dataset that uses 2019 expenses adjusted to 2021 dollars
 expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_family_type.csv') %>% 
   # remove taxes and the total expenses columns - we will calculate taxes and sum all expenses together later
   select(-`Total Expenses`, -`Taxes`) %>% 
@@ -29,7 +28,20 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
   slice(rep(1:4, times = 3)) %>%
   # add in a round column identification
   mutate(Round = rep(1:3, each = 4), .before = `Family Number`) %>% 
-  arrange(`Family Number`)
+  arrange(`Family Number`) %>% 
+  # REVIEW Updated the Health Insurance column so I can subtract Medicaid and ACA subsidy amounts from the raw health insurance costs later
+  # the current Health insurance column includes traditional fee-for-service health plans, preferred-provider health plans, health maintenance 
+  # organizations (HMO's), commercial Medicare supplements, and other health insurance
+    # We don't want this, we need to know how much a health insurance costs before any supplements, subsidies, etc.
+  # to find the monthly cost of a silver plan in Forsyth County in 2022 without financial help go to: https://www.kff.org/interactive/subsidy-calculator/
+    # 1. Select a State: Select "North Carolina" and input a Forsyth County zip code, e.g., 27104
+    # 2. Enter yearly household income as: Doesn't matter enter any amount, e.g, 50000
+    # 3. Is coverage available from your or your spouse’s job?: No
+    # 4. Number of people in family? Sum number of adults plus children
+    # 5. Number of adults (21 to 64) enrolling in Marketplace coverage: All adults assumed to be 40 y/o, non-smokers
+    # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
+    # Scroll down to the Results section, find the number to the right of "Without financial help, your silver plan would cost:"
+  mutate(`Health Insurance` = c(rep(1420, 6), rep(976, 3), rep(444, 3)))
 
 # View(expenses)
 
@@ -93,31 +105,34 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
 # household compositions, household pre-tax income, family number, and round number vectors
 
 households <- c(rep('2 adults, 2 children', 6), rep('1 adult, 2 children', 3), rep('1 adult', 3))
-# NOTE the third element in the pre_tax_income is 7000 not 7014.6 because the benefits' dataset only goes up to 7000
-# QUESTION Do we know how that impacts the numbers? 
-# addl note: Are there additional benefits that would be lost at that level or do they not qualify for any any more?
+# the third element in the pre_tax_income is 7000 not 7014.6 because the benefits' dataset only goes up to 7000
+  # Do we know how that impacts the numbers? 
+    # No impact, they are not eligible for any programs at any household size
 pre_tax_income <- c(5802, 6149, 7000, 3551, 4417, 4936, 2858, 3724, 4070, 1256, 1819, 2425)
 family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
 
+# REVIEW EL to review write-up
 # ACA Subsidies
-# the value of the health benefit is the price of a silver plan on the ACA market, the "Estimated financial help" 
-# silver plan prices for Forsyth County in 2022 were retrieved from: https://www.kff.org/interactive/subsidy-calculator/
+# to find the "Estimated financial help" or ACA subsidy value a household could receive towards a silver plan in Forsyth County 
+# in 2022 go to: https://www.kff.org/interactive/subsidy-calculator/
+  # 1. Select a State: Select "North Carolina" and input a Forsyth County zip code, e.g., 27104
+yearly_incomes <- c(5802.2, 6148.6, 7014.6, 3550.6, 4416.6, 4936.2, 2857.8, 3723.8, 4070.2, 1255.7, 1818.6, 2424.8) * 12
+  # 2. Enter yearly household income as: Entire a household's pre-tax yearly income, e.g, 7014.6 * 12 for the last 
+  # two parents, two children scenario  
+  # 3. Is coverage available from your or your spouse’s job?: No
+  # 4. Number of people in family? Sum number of adults plus children
+    # Make sure the number of people in family includes children even when not including children in the calculation
+  # 5. Number of adults (21 to 64) enrolling in Marketplace coverage: All adults assumed to be 40 y/o, non-smokers
+  # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
+  # Scroll down to the Results section, find the number to the right of "Estimate financial help:"
 
-# since children and adults qualify for different programs, calculate the value of their silver plans separately
-# FIXME EL tested and running adults and kids separately gets different subsidies than together
-  # NOTE They will be different as mentioned in the comment above
-  # TODO Let's check in on this, I'm not sure that I'm clearly communicating it in the notes
-# Addl notes: I'm pretty sure the costs are based on how much it costs to ensure the whole family
-# It's a pain, but you may need to test to see if the kids qualify for medicaid and then figure out how many
-# people would enroll in the plan
-# 1. filter for North Carolina and input a Forsyth County zip code, e.g., 27104
-# 2. enter different pre-tax incomes above in '2. Enter yearly household income as...'
-# 3. put No for '3. Is coverage available from your or your spouse’s job?'
-# 4. age of adult/s assumed to be 40 REVIEW and not a smoker; do not add children Medicaid will cover them if eligible
-
-# TODO EL hasn't checked these yet bc of the notes above
-aca_subsidies <- c(395, 365, 292, 754, 618, 543, 311, 177, 119, 444, 430, 370)
+# REVIEW EL to review the values below
+# rows 4, 5, 7, and 8 of the outcomes data frame below display child Medicaid (MIC) eligibility. In those cases, ACA
+# subsidies were calculated only for the adult/s in the household as a child or adult cannot both be
+# enrolled in Medicaid and receive ACA subsidies. If there was not child Medicaid eligibility, the whole family was
+# included when calculating ACA subsidies
+aca_subsidies <- c(1158, 1104, 968, 873, 800, 1275, 437, 364, 858, 444, 430, 370)
 
 # calculate benefit amounts received by category for each round and family type
 outcomes <- pmap(list(households, pre_tax_income, family, round), 
@@ -136,25 +151,19 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
   mutate(`Health Care` = 0,
          Savings = 0,
          Transportation = 0) %>% 
-  # add in aca subsidies for adults only
+  # add in aca subsidies from the vector above
   add_column(`ACA Subsidies` = aca_subsidies) %>% 
-  # add MIC/MAF/NC Health Choice (the past Health Insurance column) with the ACA subsidies
-  # IDEA Can children receive Medicaid and ACA subsidies? EL - no, can't get subsidies if in Medicaid
-    # IDEA Add children's ACA subsidies when they are not eligible for Medicaid?
+  # REVIEW EL to review write-up
+  # Medicaid Eligibility thresholds can be found: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://files.nc.gov/ncdma/documents/files/Basic-Medicaid-Eligibility-Chart-2020.pdf
+  # add Medicaid/MIC (only children receive Medicaid benefits through MIC) to the ACA subsidies (adults only or the entire family depending
+  # on MIC eligibility as stated above)
+    # Based on the household's pre-tax monthly income, the household composition and the Medicaid output in the benefits master dataset,
+    # the Health Insurance (Medicaid/MIC) value only applies to children. Why? Based on the household incomes and the ages of the children
+    # (2 and 4), children would only be eligible for MIC, which only provides full coverage for children, parents and caretakers
+    # do not receive anything. Therefore, we calculate the ACA subsidies for adults only when children are eligible for MIC or
+    # ACA subsidies for the entire family when children are not eligible for MIC in an attempt to get a total estimate of the Health Insurance 
+    # benefit a household could receive
   mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
-  # FIXME They can't qualify for both. 
-  # addl note: they either have medicaid, which should bring their costs to 0?
-  # or they have a subsidy which brings their costs down to the monthly rate in 
-  # the calculator 
-    # Medicaid Eligibility: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://files.nc.gov/ncdma/documents/files/Basic-Medicaid-Eligibility-Chart-2020.pdf
-    # NOTE Based on the monthly incomes provided in pre_tax_income, the household compositions and the Medicaid outputs in the benefits 
-    # data frame, the Health Insurance (Medicaid) number only applies to children. Why? Based on the household incomes and the ages of the children
-    # (2 and 4), children would only be eligible for MIC or NC Health Choice, which only provides full coverage for children, parents and caretakers
-    # do not receive anything. Therefore, we calculate the ACA subsidies for adults only (I am in favor of calculating ACA subsidies for
-    # children when they lose Medicaid eligibility) in an attempt to get an estimate of the Health Insurance benefit the household could receive
-    # NOTE This needs to be clearly documented. 
-    # QUESTION Just so I'm clear, you have checked, and in all of the income scenarios the children qualify for MIC or NC Heath Choice and the adults do not qualify for Medicaid?
-         # TODO to update the fpl threshold from 210 to 211% for the benefits table - if it matters for this analysis
   select(-`ACA Subsidies`)
 
 # View(outcomes)
@@ -189,12 +198,10 @@ family_income <- data.frame(
 family_taxes <- usincometaxes::taxsim_calculate_taxes(
   .data = family_income,
   marginal_tax_rates = 'Wages',
-  # QUESTION are those credits already included in the fiitax, siitax, and tfica
-  # NOTE EL *thinks* you would only want to add them at the end if they are refundable credits
-    # NOTE Federal income tax liability including capital gains rates, surtaxes, NIIT, AMT and 
-    # refundable and non-refundable credits etc, but not including self-employment, additional 
-    # Medicare Tax or FICA taxes. The adjustment for SE FICA is made.
-    # CHANGED DL removed EITC from calculation
+  # Are refundable tax credits, like EITC, already included in the fiitax, siitax, or tfica?
+    # Yes, Federal income tax liability (fiitax) includes capital gains rates, surtaxes, NIIT, 
+    # AMT and refundable and non-refundable credits etc, but not including self-employment, 
+    # additional Medicare Tax or FICA taxes. The adjustment for SE FICA is made.
   return_all_information = TRUE) %>% 
   select(taxsimid, fiitax, siitax, tfica)
 
@@ -206,15 +213,11 @@ after_tax_income <- family_taxes %>%
   mutate(Round = rep(1:3, times = 4), .before = `Family Number`) %>% 
   rowwise() %>% 
   # sum all tax liabilities together
-  # from Shane: Total income tax liabilities would be fiitax + siitax + tifica
+    # from Shane: Total income tax liabilities would be fiitax + siitax + tifica
   mutate(tax_liabilities = sum(fiitax, siitax, tfica), .after = `Family Number`) %>% 
-  # QUESTION Do people with negative liabilities get refunds? 
-  # addl' note: EL thinks only specific credits are refundable, but I don't know what those are
-  # If it's double-counted EL *thinks* that's the maximum amount someone would get paid if they have
-  # a negative federal liability and that they would get paid either the EITC or
-  # the absolute value of the negative tax liability, whichever is smallest
-  # it doesn't look like NC offers EITC at the state level 
-    # TODO DL to reach out to NBER
+  # If a tax filing unit has a negative tax liability (federal income tax liability + state 
+  # income tax liability + taxpayer liability for FICA), does the tax filing unit receive a refund?
+    # Yes, there are several refundable credits, including Earned Income Credit and Additional Child Tax Credit.
   ungroup() %>% 
   # make tax liabilities and eitc monthly
   mutate(across(tax_liabilities:length(.), ~ . / 12)) %>% 
@@ -236,20 +239,8 @@ dat <- bind_rows(outcomes, expenses) %>%
   group_by(Round, `Family Number`, `Family Type`) %>% 
   # take the difference between expenses and benefit outcomes by category
   summarise(across(Food:Transportation, ~ diff(.x))) %>% 
-  # TODO Confirm with CB, but EL thinks health insurance expenses is survey data which should be handled differently here 
-  # attl' note: EL thinks health insurance in livable income is what people report paying
-  # in a survey. To my understanding, this incorporates employer, medicaid, ACA, etc. type subsidies - it's just the out of pocket cost. 
-  # If this is the case, it would be better to use the cost of medicaid premiums ($0?) for people
-  # with medicare and the cost you get from the KFF instead to calculate their expenses after subsidy
-  # (you would just need to disclose you're using their silver plan estimate from the calculator)
-  # FIXME EL thinks people getting Medicaid, just get medicaid, it's not a subsidy (shouldn't be subtracted)
-    # NOTE from CB: Health insurance includes traditional fee-for-service health plans, preferred-provider health plans, health maintenance 
-    # organizations (HMO's), commercial Medicare supplements, and other health insurance
-    # QUESTION Is that agreeing with the fixme or no?
   select(Round, `Family Number`, `Family Type`, `Child Care`, Housing, Food, `Health Care`,
          `Health Insurance`, Savings, Transportation, `Other Expenses`) %>% 
-  # health insurance cannot be negative so make zero
-  mutate(`Health Insurance` = ifelse(`Health Insurance` < 0, 0, `Health Insurance`)) %>% 
   rowwise() %>% 
   # calculate total expenses across all categories
   mutate(`Total Expenses` = sum(c_across(`Child Care`:`Other Expenses`))) %>% 
