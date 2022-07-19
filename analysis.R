@@ -152,7 +152,9 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
     # (2 and 4), children would only be eligible for MIC or NC Health Choice, which only provides full coverage for children, parents and caretakers
     # do not receive anything. Therefore, we calculate the ACA subsidies for adults only (I am in favor of calculating ACA subsidies for
     # children when they lose Medicaid eligibility) in an attempt to get an estimate of the Health Insurance benefit the household could receive
-      # TODO to update the fpl threshold from 210 to 211% for the benefits table - if it matters for this analysis
+    # NOTE This needs to be clearly documented. 
+    # QUESTION Just so I'm clear, you have checked, and in all of the income scenarios the children qualify for MIC or NC Heath Choice and the adults do not qualify for Medicaid?
+         # TODO to update the fpl threshold from 210 to 211% for the benefits table - if it matters for this analysis
   select(-`ACA Subsidies`)
 
 # View(outcomes)
@@ -243,6 +245,7 @@ dat <- bind_rows(outcomes, expenses) %>%
   # FIXME EL thinks people getting Medicaid, just get medicaid, it's not a subsidy (shouldn't be subtracted)
     # NOTE from CB: Health insurance includes traditional fee-for-service health plans, preferred-provider health plans, health maintenance 
     # organizations (HMO's), commercial Medicare supplements, and other health insurance
+    # QUESTION Is that agreeing with the fixme or no?
   select(Round, `Family Number`, `Family Type`, `Child Care`, Housing, Food, `Health Care`,
          `Health Insurance`, Savings, Transportation, `Other Expenses`) %>% 
   # health insurance cannot be negative so make zero
