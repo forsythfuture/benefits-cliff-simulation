@@ -190,12 +190,14 @@ family_income <- data.frame(
 family_taxes <- usincometaxes::taxsim_calculate_taxes(
   .data = family_income,
   marginal_tax_rates = 'Wages',
-  # NOTE EITC is added to after-tax income calculation, but we can add other tax credits too
   # QUESTION are those credits already included in the fiitax, siitax, and tfica
   # NOTE EL *thinks* you would only want to add them at the end if they are refundable credits
-    # TODO EITC is a refundable tax credit. DL reached out to Shane
+    # NOTE Federal income tax liability including capital gains rates, surtaxes, NIIT, AMT and 
+    # refundable and non-refundable credits etc, but not including self-employment, additional 
+    # Medicare Tax or FICA taxes. The adjustment for SE FICA is made.
+    # CHANGED DL removed EITC from calculation
   return_all_information = TRUE) %>% 
-  select(taxsimid, fiitax, siitax, tfica, EITC = v25_eitc)
+  select(taxsimid, fiitax, siitax, tfica)
 
 # View(family_taxes)
 
@@ -209,20 +211,18 @@ after_tax_income <- family_taxes %>%
   mutate(tax_liabilities = sum(fiitax, siitax, tfica), .after = `Family Number`) %>% 
   # QUESTION Do people with negative liabilities get refunds? 
   # addl' note: EL thinks only specific credits are refundable, but I don't know what those are
-  # QUESTION Is EITC included already in either state or federal tax liabilities? 
-  # addl' note: Wouldn't want to double count it by pulling it out separately
   # If it's double-counted EL *thinks* that's the maximum amount someone would get paid if they have
   # a negative federal liability and that they would get paid either the EITC or
   # the absolute value of the negative tax liability, whichever is smallest
   # it doesn't look like NC offers EITC at the state level 
-    # TODO DL reached out to Shane
+    # TODO DL to reach out to NBER
   ungroup() %>% 
   # make tax liabilities and eitc monthly
   mutate(across(tax_liabilities:length(.), ~ . / 12)) %>% 
   # add the pre-tax income column in from above
   add_column(pwages = pre_tax_income) %>% 
-  # find the after-tax income, i.e., pre-tax income minus tax liabilities plus EITC
-  mutate(`After-Tax Income` = pwages - tax_liabilities + EITC) %>% 
+  # find the after-tax income, i.e., pre-tax income minus tax liabilities
+  mutate(`After-Tax Income` = pwages - tax_liabilities) %>% 
   # arrange by Round so we can add the after-tax income column in below
   arrange(Round) %>% 
   pull(`After-Tax Income`)
