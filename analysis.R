@@ -251,6 +251,6 @@ dat <- bind_rows(outcomes, expenses) %>%
   mutate(Balance = `After-Tax Income` - `Total Expenses`) %>% 
   arrange(`Family Number`)
 
-View(dat)
+# View(dat)
 
-readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
+# readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
