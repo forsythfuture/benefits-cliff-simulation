@@ -1,8 +1,25 @@
 # Introduction
 
-The Benefits Cliff Simulation game serves as a tool for the community to understand how household composition, expenses, benefit programs, taxes, and income all play a crucial part in impacting a household's monthly net income. From this game, one can see that purely increases in income may cause more harm than good for particular households but not so for others.
+The Benefits Cliff Simulation game serves as a tool for the community to understand how household compositions, expenses, benefit programs, taxes, and income all play a crucial part in impacting a household's monthly net income. From this game, one can see that purely increases in income may cause more harm than good for particular households but not so for others.
 
 For more information on how benefit amounts are calculated, please visit https://github.com/forsythfuture/benefits-cliff. In addition, please view the text below to understand how expenses by household composition were determined. If you have any further questions, please reach out to info@forsythfutures.org for additional guidance.
+
+# Household Simulations Table
+
+Round | Family | Household Type | Yearly Income | Hourly Wage | After-Tax Monthly Income | Monthly Expenses | Net Monthly Income
+--- | --- | --- | --- | --- | --- | --- | --- 
+1 | 1 | Two working adults with a 2- and 4-year-old | $69,626.40 | $33.50 | $5,069.86 | $5,959.75 | -$889.89
+2 | 1 | Two working adults with a 2- and 4-year-old | $73,783.20 | $35.50 | $5,329.55 | $6,013.75 | -$684.20 
+3 | 1 | Two working adults with a 2- and 4-year-old | $84,175.20 | $40.50 | $5,966.42 | $6,149.75 | -$183.33
+1 | 2 | Two working adults with a 2- and 4-year-old | $42,607.20 | $20.50 | $3,556.71 | $3,910.18 | -$353.47
+2 | 2 | Two working adults with a 2- and 4-year-old | $52,999.20 | $25.50 | $4,033.36 | $4,373.23 | -$339.87
+3 | 2 | Two working adults with a 2- and 4-year-old | $59,234.40 | $28.50 | $4,421.77 | $5,842.75 | -$1,420.98
+1 | 3 | One adult with a 2-and 4-year-old | $34,293.60 | $16.50 | $3,025.06 | $3,027.73 | -$2.67
+2 | 3 | One adult with a 2-and 4-year-old | $44,685.60 | $21.50 | $3,482.88 | $3,677.38 | -$194.50
+3 | 3 | One adult with a 2-and 4-year-old | $48,842.40 | $23.50 | $3,705.93 | $5,184.42 | -$1,478.48
+1 | 4 | One adult | $15,068.40 | $7.25 | $1,116.94 | $1,367.79 | -$250.85
+2 | 4 | One adult | $21,823.20 | $10.50 | $1,547.87 | $1,685.81 | -$137.94
+3 | 4 | One adult | $29,097.60 | $14.00 | $2,003.09 | $1,950.75 | $52.34
 
 # Household Expenses 
 
@@ -34,7 +51,7 @@ Health care expenditures beyond health insurance were calculated from the Medica
 
 ## Health Insurance
 
-Health insurance costs are calculated from the Consumer Expenditure Survey (US Bureau of Labor Statistics [BLS], 2021). The most recent data costs were regionally adjusted (South) and costs account for differences in spending by age in addition to household size.
+Health insurance costs are calculated from the Kaiser Family Foundation's Health Insurance Marketplace Calculator. By entering the prompts based on the household's profile, the monthly cost of a silver plan, without any financial help, in Forsyth County for 2022 is outputted.
 
 ## Transportation
 
@@ -42,7 +59,7 @@ Transportation expenses are calculated from the Consumer Expenditure Survey. It 
 
 ## Taxes
 
-Federal and state taxes are calculated on various income data from the American Community Survey and include non-wage income (i.e., social security income) in the calculation. After the incomes and number of dependents are calculated for each tax unit, taxes are estimated using [NBER's TAXSIM](http://taxsim.nber.org/taxsim35/) from a statistical software R.
+Federal, state, and payroll taxes for tax filing units are estimated using [NBER's TAXSIM](http://taxsim.nber.org/taxsim35/) with the [usincometaxes](https://www.shaneorr.io/r/usincometaxes/) R package.
 
 ## Other Expenses
 
@@ -60,9 +77,9 @@ Child Care | North Carolina Child Care Market Rate Study; The US and the High Pr
 Housing | Fair Market Rents (FMR) | US Department of Housing and Urban Development (HUD) | County
 Food | Low-Cost Food Plan | US Department of Agriculture (USDA) | Region 
 Health Care | Medical Expenditure Panel Survey (MEPS) | US Department of Health and Human Services (US DHHS) | Region 
-Health Insurance | Consumer Expenditure Survey (CES) | Bureau of Labor Statistics (BLS) | Region 
+Health Insurance | Health Insurance Marketplace Calculator | Kaiser Family Foundation | County 
 Transportation | Consumer Expenditure Survey (CES) | Bureau of Labor Statistics (BLS) | Region 
-Taxes | Federal and State Tax Codes; TAXSIM 35 | US Congress; National Bureau of Economic Research | National and State 
+Taxes | Federal and State Tax Codes; TAXSIM 35 | US Congress; National Bureau of Economic Research | National and State
 Other Expenses | Consumer Expenditure Survey (CES); Zipcode Competition & Pricing Data | Bureau of Labor Statistics (BLS); BroadbandNow Research | Region and County 
 
 ## Savings Expenses 
