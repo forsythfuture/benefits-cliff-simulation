@@ -41,8 +41,10 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
     # 5. Number of adults (21 to 64) enrolling in Marketplace coverage: All adults assumed to be 40 y/o, non-smokers
     # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
     # Scroll down to the Results section, find the number to the right of "Without financial help, your silver plan would cost:"
-  # REVIEW Children are eligible for MIC for Family Numbers 2 and 3 during Round 1 and 2, so children are not included in the 
+  # Children are eligible for MIC for Family Numbers 2 and 3 during Round 1 and 2, so children are not included in the 
   # cost of a silver plan just the adult/s
+  # QUESTION Are you summing benefits gained or lost or using the raw expense information anywhere in the simulation?
+    # If so, this solution won't work for that - otherwise it works
   mutate(`Health Insurance` = c(rep(1420, 3), rep(888, 2), rep(1420, 1), rep(444, 2),rep(976, 1), rep(444, 3)))
 
 # View(expenses)
@@ -79,7 +81,7 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
            Round = round_number)
   
 }
-
+#FIXME If you're using this solution, you'll want to zero out the benefit for Medicaid and MIC
 # ---------------------------------
 
 # Household monthly incomes and corresponding wages for the different household compositions
@@ -152,7 +154,7 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
          Transportation = 0) %>% 
   # add in aca subsidies from the vector above
   add_column(`ACA Subsidies` = aca_subsidies) %>% 
-  # Medicaid Eligibility thresholds can be found: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://files.nc.gov/ncdma/documents/files/Basic-Medicaid-Eligibility-Chart-2020.pdf
+  # Medicaid Eligibility thresholds can be found: https://files.nc.gov/ncdma/documents/files/Basic-Medicaid-Eligibility-Chart-2020.pdf
   # add Medicaid/MIC (only children receive Medicaid benefits through MIC) to the ACA subsidies (adults only or the entire family depending
   # on MIC eligibility as stated above)
     # Based on the household's pre-tax monthly income, the household composition and the Medicaid output in the benefits master dataset,
