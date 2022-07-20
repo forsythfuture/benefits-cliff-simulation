@@ -111,7 +111,6 @@ pre_tax_income <- c(5802, 6149, 7000, 3551, 4417, 4936, 2858, 3724, 4070, 1256, 
 family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
 
-# REVIEW EL to review write-up
 # ACA Subsidies
 # to find the "Estimated financial help" or ACA subsidy value a household could receive towards a silver plan in Forsyth County 
 # in 2022 go to: https://www.kff.org/interactive/subsidy-calculator/
