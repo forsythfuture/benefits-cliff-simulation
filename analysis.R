@@ -29,7 +29,7 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
   # add in a round column identification
   mutate(Round = rep(1:3, each = 4), .before = `Family Number`) %>% 
   arrange(`Family Number`) %>% 
-  # REVIEW Updated the Health Insurance column so I can subtract Medicaid and ACA subsidy amounts from the raw health insurance costs later
+  # Updated the Health Insurance column so I can subtract Medicaid and ACA subsidy amounts from the raw health insurance costs later
   # the current Health insurance column includes traditional fee-for-service health plans, preferred-provider health plans, health maintenance 
   # organizations (HMO's), commercial Medicare supplements, and other health insurance
     # We don't want this, we need to know how much a health insurance costs before any supplements, subsidies, etc.
@@ -106,8 +106,7 @@ benefit_simuluation <- function(household_composition, household_monthly_income,
 
 households <- c(rep('2 adults, 2 children', 6), rep('1 adult, 2 children', 3), rep('1 adult', 3))
 # the third element in the pre_tax_income is 7000 not 7014.6 because the benefits' dataset only goes up to 7000
-  # Do we know how that impacts the numbers? 
-    # No impact, they are not eligible for any programs at any household size
+  # does not impact benefits they are not eligible for any programs at any household size
 pre_tax_income <- c(5802, 6149, 7000, 3551, 4417, 4936, 2858, 3724, 4070, 1256, 1819, 2425)
 family <- rep(1:4, each = 3)
 round <- rep(1:3, times = 4)
@@ -127,7 +126,6 @@ yearly_incomes <- c(5802.2, 6148.6, 7014.6, 3550.6, 4416.6, 4936.2, 2857.8, 3723
   # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
   # Scroll down to the Results section, find the number to the right of "Estimate financial help:"
 
-# REVIEW EL to review the values below
 # rows 4, 5, 7, and 8 of the outcomes data frame below display child Medicaid (MIC) eligibility. In those cases, ACA
 # subsidies were calculated only for the adult/s in the household as a child or adult cannot both be
 # enrolled in Medicaid and receive ACA subsidies. If there was not child Medicaid eligibility, the whole family was
@@ -153,7 +151,6 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
          Transportation = 0) %>% 
   # add in aca subsidies from the vector above
   add_column(`ACA Subsidies` = aca_subsidies) %>% 
-  # REVIEW EL to review write-up
   # Medicaid Eligibility thresholds can be found: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://files.nc.gov/ncdma/documents/files/Basic-Medicaid-Eligibility-Chart-2020.pdf
   # add Medicaid/MIC (only children receive Medicaid benefits through MIC) to the ACA subsidies (adults only or the entire family depending
   # on MIC eligibility as stated above)
@@ -163,6 +160,7 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
     # do not receive anything. Therefore, we calculate the ACA subsidies for adults only when children are eligible for MIC or
     # ACA subsidies for the entire family when children are not eligible for MIC in an attempt to get a total estimate of the Health Insurance 
     # benefit a household could receive
+  # FIXME Should replace health insurance cost for children on Medicaid and MIC, not subtract benefits from silver plan cost
   mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
   select(-`ACA Subsidies`)
 
@@ -214,6 +212,7 @@ after_tax_income <- family_taxes %>%
   rowwise() %>% 
   # sum all tax liabilities together
     # from Shane: Total income tax liabilities would be fiitax + siitax + tifica
+  #FIXME ELis reading Daniel's emails that we shouldn't have tfica in here bc it's paid by employers
   mutate(tax_liabilities = sum(fiitax, siitax, tfica), .after = `Family Number`) %>% 
   # If a tax filing unit has a negative tax liability (federal income tax liability + state 
   # income tax liability + taxpayer liability for FICA), does the tax filing unit receive a refund?
