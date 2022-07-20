@@ -41,7 +41,9 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
     # 5. Number of adults (21 to 64) enrolling in Marketplace coverage: All adults assumed to be 40 y/o, non-smokers
     # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
     # Scroll down to the Results section, find the number to the right of "Without financial help, your silver plan would cost:"
-  mutate(`Health Insurance` = c(rep(1420, 6), rep(976, 3), rep(444, 3)))
+  # Children are eligible for MIC for Family Number's 2 and 3 during Round 1 and 2, so children are not included in the 
+  # cost of a silver plan just the adult/s
+  mutate(`Health Insurance` = c(rep(1420, 3), rep(888, 2), rep(1420, 1), rep(444, 2),rep(976, 1), rep(444, 3)))
 
 # View(expenses)
 
@@ -159,8 +161,7 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
     # do not receive anything. Therefore, we calculate the ACA subsidies for adults only when children are eligible for MIC or
     # ACA subsidies for the entire family when children are not eligible for MIC in an attempt to get a total estimate of the Health Insurance 
     # benefit a household could receive
-  # FIXME Should replace health insurance cost for children on Medicaid and MIC, not subtract benefits from silver plan cost
-  mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
+  mutate(`Health Insurance` = `Health Insurance`) %>%  # + `ACA Subsidies`) %>% 
   select(-`ACA Subsidies`)
 
 # View(outcomes)
@@ -210,8 +211,7 @@ after_tax_income <- family_taxes %>%
   mutate(Round = rep(1:3, times = 4), .before = `Family Number`) %>% 
   rowwise() %>% 
   # sum all tax liabilities together
-    # from Shane: Total income tax liabilities would be fiitax + siitax + tifica
-  #FIXME ELis reading Daniel's emails that we shouldn't have tfica in here bc it's paid by employers
+    # from Shane: Total income tax liabilities would be fiitax + siitax + tfica
   mutate(tax_liabilities = sum(fiitax, siitax, tfica), .after = `Family Number`) %>% 
   # If a tax filing unit has a negative tax liability (federal income tax liability + state 
   # income tax liability + taxpayer liability for FICA), does the tax filing unit receive a refund?
