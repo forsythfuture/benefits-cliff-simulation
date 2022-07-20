@@ -152,16 +152,16 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
          Transportation = 0) %>% 
   # add in aca subsidies from the vector above
   add_column(`ACA Subsidies` = aca_subsidies) %>% 
-  # Medicaid Eligibility thresholds can be found: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://files.nc.gov/ncdma/documents/files/Basic-Medicaid-Eligibility-Chart-2020.pdf
-  # add Medicaid/MIC (only children receive Medicaid benefits through MIC) to the ACA subsidies (adults only or the entire family depending
-  # on MIC eligibility as stated above)
+  # since in the expenses section we acknowledged that children eligible for MIC have a health insurance cost of $0
+  # and only calculated the cost of the silver plan for adult/s, now we will replace the Health Insurance column 
+  # (currently MIC estimates) with the ACA subsidies available
     # Based on the household's pre-tax monthly income, the household composition and the Medicaid output in the benefits master dataset,
     # the Health Insurance (Medicaid/MIC) value only applies to children. Why? Based on the household incomes and the ages of the children
     # (2 and 4), children would only be eligible for MIC, which only provides full coverage for children, parents and caretakers
     # do not receive anything. Therefore, we calculate the ACA subsidies for adults only when children are eligible for MIC or
     # ACA subsidies for the entire family when children are not eligible for MIC in an attempt to get a total estimate of the Health Insurance 
     # benefit a household could receive
-  mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
+  mutate(`Health Insurance` = `ACA Subsidies`) %>% 
   select(-`ACA Subsidies`)
 
 # View(outcomes)
