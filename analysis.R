@@ -41,7 +41,7 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
     # 5. Number of adults (21 to 64) enrolling in Marketplace coverage: All adults assumed to be 40 y/o, non-smokers
     # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
     # Scroll down to the Results section, find the number to the right of "Without financial help, your silver plan would cost:"
-  # Children are eligible for MIC for Family Number's 2 and 3 during Round 1 and 2, so children are not included in the 
+  # REVIEW Children are eligible for MIC for Family Numbers 2 and 3 during Round 1 and 2, so children are not included in the 
   # cost of a silver plan just the adult/s
   mutate(`Health Insurance` = c(rep(1420, 3), rep(888, 2), rep(1420, 1), rep(444, 2),rep(976, 1), rep(444, 3)))
 
@@ -161,7 +161,7 @@ outcomes <- pmap(list(households, pre_tax_income, family, round),
     # do not receive anything. Therefore, we calculate the ACA subsidies for adults only when children are eligible for MIC or
     # ACA subsidies for the entire family when children are not eligible for MIC in an attempt to get a total estimate of the Health Insurance 
     # benefit a household could receive
-  mutate(`Health Insurance` = `Health Insurance`) %>%  # + `ACA Subsidies`) %>% 
+  mutate(`Health Insurance` = `Health Insurance` + `ACA Subsidies`) %>% 
   select(-`ACA Subsidies`)
 
 # View(outcomes)
@@ -239,6 +239,8 @@ dat <- bind_rows(outcomes, expenses) %>%
   summarise(across(Food:Transportation, ~ diff(.x))) %>% 
   select(Round, `Family Number`, `Family Type`, `Child Care`, Housing, Food, `Health Care`,
          `Health Insurance`, Savings, Transportation, `Other Expenses`) %>% 
+  # health insurance cannot be negative, make zero
+  mutate(`Health Insurance` = ifelse(`Health Insurance` < 0, 0, `Health Insurance`)) %>%
   rowwise() %>% 
   # calculate total expenses across all categories
   mutate(`Total Expenses` = sum(c_across(`Child Care`:`Other Expenses`))) %>% 
@@ -251,4 +253,4 @@ dat <- bind_rows(outcomes, expenses) %>%
 
 View(dat)
 
-# readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
+readr::write_csv(dat, '~/benefits-cliff-simulation/csvs/benefit-simulation.csv')
