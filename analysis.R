@@ -41,7 +41,7 @@ expenses <- readr::read_csv('~/benefits-cliff-simulation/csvs/itemized_expenses_
     # 5. Number of adults (21 to 64) enrolling in Marketplace coverage: All adults assumed to be 40 y/o, non-smokers
     # 6. Number of children (20 and younger) enrolling in Marketplace coverage: One child is 2, one child is 4 both non-smokers
     # Scroll down to the Results section, find the number to the right of "Without financial help, your silver plan would cost:"
-  # REVIEW Children are eligible for MIC for Family Numbers 2 and 3 during Round 1 and 2, so children are not included in the 
+  # Children are eligible for MIC for Family Numbers 2 and 3 during Round 1 and 2, so children are not included in the 
   # cost of a silver plan just the adult/s
   mutate(`Health Insurance` = c(rep(1420, 3), rep(888, 2), rep(1420, 1), rep(444, 2),rep(976, 1), rep(444, 3)))
 
