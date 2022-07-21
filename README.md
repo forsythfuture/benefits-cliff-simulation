@@ -6,7 +6,7 @@ For more information on how benefit amounts are calculated, please visit https:/
 
 # Household Simulations Table
 
-Round | Family | Household Type | Yearly Income | Hourly Wage | After-Tax Monthly Income | Monthly Expenses | Net Monthly Income
+Round | Family | Household Type | Pre-Tax Yearly Income | Pre-Tax Hourly Wage | After-Tax Monthly Income | Monthly Expenses | Net Monthly Income
 --- | --- | --- | --- | --- | --- | --- | --- 
 1 | 1 | Two working adults with a 2- and 4-year-old | $69,626.40 | $33.50 | $5,069.86 | $5,959.75 | -$889.89
 2 | 1 | Two working adults with a 2- and 4-year-old | $73,783.20 | $35.50 | $5,329.55 | $6,013.75 | -$684.20 
