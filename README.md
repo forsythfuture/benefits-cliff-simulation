@@ -53,7 +53,7 @@ Health care expenditures beyond health insurance were calculated from the Medica
 
 Health insurance costs are calculated from the Kaiser Family Foundation's Health Insurance Marketplace Calculator. By entering the prompts based on the household's profile, the monthly cost of a silver plan, without any financial help, in Forsyth County for 2022 is outputted.
 
-Note: The benefits cliff simulation analysis subtracts Affordable Care Act (ACA) subsidies that the family is eligible for from the monthly cost of a silver plan to calculate the difference in health insurance costs. However, children who are eligible for Medicaid for Infants and Children are not acknowledged in the generation of the monthly cost of a silver plan since the children's health insurance costs are assumed to be zero; therefore, the monthly cost of a silver plan and the amount of eligible ACA subsidies are calculated for the adult/s in the household only in these situations.
+*Note: The benefits cliff simulation analysis subtracts Affordable Care Act (ACA) subsidies that the family is eligible for from the monthly cost of a silver plan to calculate the difference in health insurance costs. However, children who are eligible for Medicaid for Infants and Children are not acknowledged in the generation of the monthly cost of a silver plan since the children's health insurance costs are assumed to be zero; therefore, the monthly cost of a silver plan and the amount of eligible ACA subsidies are calculated for the adult/s in the household only in these situations.*
 
 ## Transportation
 
